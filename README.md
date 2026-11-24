@@ -1,14 +1,16 @@
 # Lab QC API
 
-**FastAPI service for analytical laboratory data ingestion, quality contracts, Shewhart/Westgard drift detection, and automated batch release decisions.**
+A FastAPI service for deciding which laboratory batches need review. It harmonizes instrument units, keeps invalid readings for inspection, and flags calibration drift even when a sample falls within its configured range.
 
-Analytical laboratories receive daily multi-instrument exports that frequently contain unit mismatches (`µg/L` vs `mg/L`, `mS/cm` vs `µS/cm`), duplicate records, malformed rows, and gradual calibration drift. **Lab QC API** solves this at the API boundary: it normalizes and stores valid readings idempotently in SQLite, routes invalid records to a queryable quarantine table instead of failing entire batches, monitors QC standards with Shewhart/Westgard rules (`1-2s`, `1-3s`, `2-2s`, `8-x`), and blocks batch release whenever an instrument drifts out of statistical control.
+**60-day synthetic demo** · 1,038 readings received · 1,020 stored · 6 duplicates · 12 quarantined. Of 60 batches, 50 were approved, 8 held for review, and 2 rejected.
+
+[Run the demo locally](#quickstart) · [See the clean-install verification on GitHub Actions](https://github.com/xx636xx/lab-qc-api/actions/runs/45477826366)
 
 ![Lab QC API Overview — Shewhart Control Chart, Quarantine Breakdown & Batch Release Verdicts](assets/qc_api_overview.png)
 
 ---
 
-## Quickstart (Run Locally in 60 Seconds)
+## Quickstart
 
 ```bash
 git clone https://github.com/xx636xx/lab-qc-api.git
