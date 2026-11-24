@@ -1,0 +1,42 @@
+name: Reproduce the FastAPI demo
+on:
+  push:
+    branches: [main, verify-fastapi-demo]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install package in a clean environment
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -e '.[dev]'
+          .venv/bin/python -m pip check
+      - name: Test FastAPI endpoints and reproduce the published figures
+        run: |
+          .venv/bin/python -m pytest -q
+          .venv/bin/python -m lab_qc_api.cli generate-assets --days 60 --output "$RUNNER_TEMP/overview.png" > "$RUNNER_TEMP/results.json"
+          .venv/bin/python - <<'PY'
+          import json, os
+          from pathlib import Path
+          output = Path(os.environ["RUNNER_TEMP"])
+          result = json.loads((output / "results.json").read_text())
+          seed = result["seed_result"]
+          keys = ["received", "inserted", "duplicates_skipped", "quarantined", "unit_conversions"]
+          print({key: seed[key] for key in keys})
+          print(result["batch_verdict_counts"])
+          assert [seed[k] for k in keys] == [1038, 1020, 6, 12, 90]
+          assert result["batch_verdict_counts"] == {"APPROVED": 50, "HOLD_FOR_REVIEW": 8, "REJECTED": 2}
+          assert (output / "overview.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+          PY
