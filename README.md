@@ -147,3 +147,5 @@ lab-qc-api/
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+Alejandro Montejo de Luna
